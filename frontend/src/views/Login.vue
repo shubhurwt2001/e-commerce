@@ -72,7 +72,7 @@ export default {
         return this.$swal({ text: "Please provide password", icon: "error" });
 
       axios
-        .post(`${process.env.URL ? process.env.URL : 'http://localhost:3000'}/api/user/login`, {
+        .post(`${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/login`, {
           email: this.email,
           password: this.password,
           cart: localStorage.getItem("cart")

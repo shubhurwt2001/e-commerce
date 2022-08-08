@@ -70,8 +70,8 @@ export default {
     ...mapActions(["changeLocalCart"]),
     ...mapGetters(["user"]),
     getProducts() {
-      console.log(process.env.URL)
-      axios(`${process.env.URL ? process.env.URL : 'http://localhost:3000'}/api/user/products`)
+      console.log(process.env.VUE_APP_URL)
+      axios(`${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/products`)
         .then((res) => {
           this.products = res.data.data;
         })
@@ -123,7 +123,7 @@ export default {
 
       axios
         .post(
-          `${process.env.URL ? process.env.URL : 'http://localhost:3000'}/api/user/add-to-cart`,
+          `${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/add-to-cart`,
           {
             cart,
           },

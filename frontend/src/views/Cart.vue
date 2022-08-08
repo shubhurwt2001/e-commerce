@@ -108,7 +108,7 @@ export default {
       }
       if (items.length > 0) {
         axios
-          .post(`${process.env.URL ? process.env.URL : 'http://localhost:3000'}/api/user/cart`, {
+          .post(`${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/cart`, {
             items: items,
           })
           .then((res) => {
@@ -123,7 +123,7 @@ export default {
       if (this.isAuthenticated) {
         axios
           .post(
-            `${process.env.URL ? process.env.URL : 'http://localhost:3000'}/api/user/clear-cart`,
+            `${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/clear-cart`,
             {},
             {
               headers: {

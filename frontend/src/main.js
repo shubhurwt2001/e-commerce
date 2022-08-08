@@ -8,4 +8,5 @@ const app = createApp(App);
 app.use(VueSweetalert2);
 app.use(router);
 app.use(store);
+// console.log(process.env);
 app.mount("#app");

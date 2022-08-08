@@ -103,7 +103,7 @@ export default {
           text: "Password confirmation does not match",
         });
       axios
-        .post(`${process.env.URL ? process.env.URL : 'http://localhost:3000'}/api/user/register`, {
+        .post(`${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/register`, {
           name: this.name,
           email: this.email,
           password: this.password,

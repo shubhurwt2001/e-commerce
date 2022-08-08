@@ -43,7 +43,7 @@ const router = createRouter({
 const checkAuth = (to, from, next) => {
   if (localStorage.getItem("token")) {
     axios
-      .get(`${process.env.URL ? process.env.URL : 'http://localhost:3000'}/api/user/profile`, {
+      .get(`${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/profile`, {
         headers: {
           "x-access-token": localStorage.getItem("token"),
         },
