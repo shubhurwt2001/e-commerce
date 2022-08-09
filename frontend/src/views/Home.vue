@@ -70,7 +70,6 @@ export default {
     ...mapActions(["changeLocalCart"]),
     ...mapGetters(["user"]),
     getProducts() {
-      console.log(process.env.VUE_APP_URL)
       axios(`${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/products`)
         .then((res) => {
           this.products = res.data.data;

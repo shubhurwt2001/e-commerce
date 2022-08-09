@@ -36,7 +36,16 @@ import { RouterLink } from "vue-router";
                     </div>
                   </div>
                 </td>
-                <td style="width: 20%">{{ item.count }}</td>
+                <td style="width: 20%">
+                  <input
+                    type="number"
+                    :value="item.count"
+                    min="1"
+                    :max="item.quantity"
+                    @change="changeQuantity(item._id)"
+                    class="form-control width100px bg-transparent text-white"
+                  />
+                </td>
                 <td style="width: 20%">
                   {{ item.count }} X $ {{ item.price }} = $
                   {{ item.price * item.count }}
@@ -85,6 +94,7 @@ export default {
   data() {
     return {
       cart: [],
+      timer: 0,
     };
   },
   components: {
@@ -108,9 +118,16 @@ export default {
       }
       if (items.length > 0) {
         axios
-          .post(`${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/cart`, {
-            items: items,
-          })
+          .post(
+            `${
+              process.env.VUE_APP_URL
+                ? process.env.VUE_APP_URL
+                : "http://localhost:3000"
+            }/api/user/cart`,
+            {
+              items: items,
+            }
+          )
           .then((res) => {
             this.cart = res.data.data;
           })
@@ -123,7 +140,11 @@ export default {
       if (this.isAuthenticated) {
         axios
           .post(
-            `${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/clear-cart`,
+            `${
+              process.env.VUE_APP_URL
+                ? process.env.VUE_APP_URL
+                : "http://localhost:3000"
+            }/api/user/clear-cart`,
             {},
             {
               headers: {
@@ -144,6 +165,52 @@ export default {
         this.$store.dispatch("changeLocalCart");
       }
     },
+    changeQuantity(id) {
+      const updatedLive = this.cart.map((item) => {
+        if (item._id == id) {
+          item.count = parseInt(event.target.value);
+        }
+        return { id: item._id, count: item.count };
+      });
+
+      if (this.isAuthenticated) {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+          axios
+            .post(
+              `${
+                process.env.VUE_APP_URL
+                  ? process.env.VUE_APP_URL
+                  : "http://localhost:3000"
+              }/api/user/add-to-cart`,
+              {
+                cart: updatedLive,
+              },
+              {
+                headers: {
+                  "x-access-token": localStorage.getItem("token"),
+                },
+              }
+            )
+            .then((res) => {
+              this.$store.dispatch("checkAuth", res.data.data);
+            })
+            .catch((err) => {
+              console.log(err.response);
+            });
+        }, 2000);
+      } else {
+        const updatedLocal = JSON.parse(localStorage.getItem("cart")).filter(
+          (item) => {
+            if (item.id == id) {
+              item.count = event.target.value;
+            }
+            return true;
+          }
+        );
+        localStorage.setItem("cart", JSON.stringify(updatedLocal));
+      }
+    },
   },
 };
 </script>
@@ -162,5 +229,9 @@ export default {
   img {
     margin-bottom: 10px;
   }
+}
+.width100px {
+  max-width: 65px;
+  min-width: 65px;
 }
 </style>

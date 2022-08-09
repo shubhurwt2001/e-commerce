@@ -1,7 +1,6 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 const Product = require("../models/product");
 const register = async (req, res) => {
   // Our register logic starts here

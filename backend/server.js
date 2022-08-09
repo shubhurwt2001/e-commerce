@@ -6,7 +6,6 @@ const userRouter = require("./routes/user");
 const adminRouter = require("./routes/admin");
 
 var app = express();
-
 app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
