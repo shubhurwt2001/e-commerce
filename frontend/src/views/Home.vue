@@ -17,7 +17,7 @@
               :style="{ 'background-image': 'url(' + product.image + ')' }"
             >
               <div class="product-details">
-                <div class="price">$ {{ product.price }}</div>
+                <div class="price">INR {{ product.price }}</div>
                 <div class="quantity">{{ product.quantity }} left</div>
               </div>
             </div>

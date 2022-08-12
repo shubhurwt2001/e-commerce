@@ -9,5 +9,7 @@ router.get("/products", userController.getProducts);
 router.get("/profile", auth, userController.profile);
 router.post("/add-to-cart", auth, userController.addToCart);
 router.post("/clear-cart", auth, userController.clearCart);
+router.post("/checkout", auth, userController.checkout);
+router.post("/place-order", auth, userController.placeOrder);
 router.post("/cart", userController.cart);
 module.exports = router;

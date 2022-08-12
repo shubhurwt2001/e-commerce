@@ -1,6 +1,4 @@
-<script setup>
-import { RouterLink } from "vue-router";
-</script>
+<script setup></script>
 <template>
   <div>
     <Hero
@@ -53,7 +51,7 @@ import { RouterLink } from "vue-router";
                   </div>
                 </td>
                 <td style="width: 20%">
-                  {{ item.count }} X $ {{ item.price }} = $
+                  {{ item.count }} X INR {{ item.price }} = INR
                   {{ item.price * item.count }}
                 </td>
               </tr>
@@ -64,7 +62,7 @@ import { RouterLink } from "vue-router";
                 <th></th>
                 <th></th>
                 <th>
-                  Total :- &nbsp;&nbsp; $
+                  Total :- &nbsp;&nbsp; INR
                   {{
                     cart.reduce((a, b) => a + (b["price"] * b["count"] || 0), 0)
                   }}
@@ -77,11 +75,11 @@ import { RouterLink } from "vue-router";
           <button class="btn btn-danger btn-lg me-3" @click="clearCart">
             Clear Cart
           </button>
-          <RouterLink
+          <button
             class="btn btn-success btn-lg"
             v-text="isAuthenticated ? 'Checkout' : 'Login to checkout'"
-            to="/checkout"
-          />
+            @click="checkout()"
+          ></button>
         </div>
         <div class="col-md-12 text-center" v-else>
           <h2>No item in cart</h2>
@@ -255,6 +253,83 @@ export default {
         localStorage.setItem("cart", JSON.stringify(updatedLocal));
         this.$store.dispatch("changeLocalCart");
         this.cart = updatedLive;
+      }
+    },
+    checkout() {
+      if (!this.isAuthenticated) {
+        localStorage.setItem("pathToLoadAfterLogin", "/cart");
+        this.$router.push({ path: "/login" });
+      } else {
+        axios
+          .post(
+            `${
+              process.env.VUE_APP_URL
+                ? process.env.VUE_APP_URL
+                : "http://localhost:3000"
+            }/api/user/checkout`,
+            {
+              items: this.cart,
+            },
+            {
+              headers: {
+                "x-access-token": localStorage.getItem("token"),
+              },
+            }
+          )
+          .then((res) => {
+            var options = {
+              key_id: process.env.VUE_APP_RZRPAY_ID,
+              amount: res.data.data.amount_due,
+              currency: res.data.data.currency,
+              order_id: res.data.data.id,
+              name: "S-Commerce",
+              description: "Test Transaction",
+              image: "https://vuejs.org/images/logo.png",
+              handler: (response) => {
+                axios
+                  .post(
+                    `${
+                      process.env.VUE_APP_URL
+                        ? process.env.VUE_APP_URL
+                        : "http://localhost:3000"
+                    }/api/user/place-order`,
+                    {
+                      items: this.cart,
+                      amount: res.data.data.amount_due,
+                      order_id: response.razorpay_order_id,
+                      payment_id: response.razorpay_payment_id,
+                      signature: response.razorpay_signature,
+                    },
+                    {
+                      headers: {
+                        "x-access-token": localStorage.getItem("token"),
+                      },
+                    }
+                  )
+                  .then((res) => {
+                    this.$store.dispatch("checkAuth", res.data.data);
+                    this.items = [];
+                    this.$swal({
+                      icon: "success",
+                      text: "Order placed successfully.",
+                    });
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    alert(err.response.data);
+                  });
+              },
+            };
+            var rpz1 = new window.Razorpay(options);
+            rpz1.open();
+          })
+          .catch((err) => {
+            console.log(err);
+            this.$swal({
+              icon: "error",
+              text: err.response.data.data.error.description,
+            });
+          });
       }
     },
   },

@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Razorpay = require("razorpay");
 const Product = require("../models/product");
 const register = async (req, res) => {
   // Our register logic starts here
@@ -77,7 +78,7 @@ const login = async (req, res) => {
         await User.updateOne({ _id: user._id }, { $set: { cart: items } });
         user = await User.findOne(
           { _id: user._id },
-          "_id email type cart token"
+          "_id email type cart token orders"
         );
       }
       user.token = token;
@@ -103,7 +104,7 @@ const profile = async (req, res) => {
     // Get user input
     const user = await User.findOne(
       { _id: req.user.user_id },
-      "_id email type cart"
+      "_id email type cart orders"
     );
     res.status(201).json({ data: user });
   } catch (err) {
@@ -119,7 +120,7 @@ const addToCart = async (req, res) => {
     );
     const user = await User.findOne(
       { _id: req.user.user_id },
-      "_id email type cart"
+      "_id email type cart orders"
     );
     res.status(201).json({ data: user });
   } catch (err) {
@@ -158,6 +159,65 @@ const clearCart = async (req, res) => {
     console.log(err);
   }
 };
+
+const checkout = async (req, res) => {
+  try {
+    const discarded = [];
+    const products = req.body.items.filter(async (item) => {
+      var product = await Product.findOne({ _id: item._id });
+      if (product.quantity >= item.count) {
+        return true;
+      } else {
+        item.quantity = product.quantity;
+        discarded.push(item);
+      }
+    });
+
+    if (discarded.length > 0) {
+      res.status(500).json({ data: discarded });
+    } else {
+      var instance = await new Razorpay({
+        key_id: process.env.RZRPAY_ID,
+        key_secret: process.env.RZRPAY_SECRET,
+      });
+
+      instance.orders
+        .create({
+          amount:
+            products.reduce((a, b) => a + (b["price"] * b["count"] || 0), 0) *
+            100,
+          currency: "INR",
+          receipt: "receipt#1",
+        })
+        .then((data) => {
+          res.status(201).json({ data: data });
+        })
+        .catch((err) => {
+          res.status(400).json({ data: err });
+        });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const placeOrder = async (req, res) => {
+  try {
+    const { order_id, payment_id, signature, amount, items } = req.body;
+    const order = { order_id, payment_id, signature, amount, items };
+    await User.updateOne(
+      { _id: req.user.user_id },
+      { $push: { orders: order }, $set: { cart: [] } }
+    );
+    const user = await User.findOne(
+      { _id: req.user.user_id },
+      "_id email type cart orders"
+    );
+    res.status(201).json({ data: user });
+  } catch (err) {
+    console.log(err);
+  }
+};
 exports.login = login;
 exports.register = register;
 exports.getProducts = getProducts;
@@ -165,3 +225,5 @@ exports.profile = profile;
 exports.addToCart = addToCart;
 exports.cart = cart;
 exports.clearCart = clearCart;
+exports.checkout = checkout;
+exports.placeOrder = placeOrder;

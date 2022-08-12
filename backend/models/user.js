@@ -8,6 +8,7 @@ const userSchema = new Schema({
   token: { type: String },
   type: { type: String },
   cart: { type: Array },
+  orders: { type: Array },
 });
 
 module.exports = mongoose.model("User", userSchema);
