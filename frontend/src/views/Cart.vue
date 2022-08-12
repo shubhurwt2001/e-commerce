@@ -37,14 +37,20 @@ import { RouterLink } from "vue-router";
                   </div>
                 </td>
                 <td style="width: 20%">
-                  <input
-                    type="number"
-                    :value="item.count"
-                    min="1"
-                    :max="item.quantity"
-                    @change="changeQuantity(item._id)"
-                    class="form-control width100px bg-transparent text-white"
-                  />
+                  <div class="d-flex align-items-center">
+                    <input
+                      type="number"
+                      :value="item.count"
+                      min="1"
+                      :max="item.quantity"
+                      @change="changeQuantity(item._id)"
+                      class="form-control width100px bg-transparent text-white"
+                    />
+                    <i
+                      class="fa-solid fa-trash-can text-danger ms-2"
+                      @click="removeItem(item._id)"
+                    ></i>
+                  </div>
                 </td>
                 <td style="width: 20%">
                   {{ item.count }} X $ {{ item.price }} = $
@@ -211,6 +217,46 @@ export default {
         localStorage.setItem("cart", JSON.stringify(updatedLocal));
       }
     },
+    removeItem(id) {
+      const updatedLive = this.cart.filter((item) => {
+        return item._id != id;
+      });
+
+      if (this.isAuthenticated) {
+        axios
+          .post(
+            `${
+              process.env.VUE_APP_URL
+                ? process.env.VUE_APP_URL
+                : "http://localhost:3000"
+            }/api/user/add-to-cart`,
+            {
+              cart: updatedLive,
+            },
+            {
+              headers: {
+                "x-access-token": localStorage.getItem("token"),
+              },
+            }
+          )
+          .then((res) => {
+            this.$store.dispatch("checkAuth", res.data.data);
+            this.cart = updatedLive;
+          })
+          .catch((err) => {
+            console.log(err.response);
+          });
+      } else {
+        const updatedLocal = JSON.parse(localStorage.getItem("cart")).filter(
+          (item) => {
+            return item.id != id;
+          }
+        );
+        localStorage.setItem("cart", JSON.stringify(updatedLocal));
+        this.$store.dispatch("changeLocalCart");
+        this.cart = updatedLive;
+      }
+    },
   },
 };
 </script>
@@ -233,5 +279,8 @@ export default {
 .width100px {
   max-width: 65px;
   min-width: 65px;
+}
+.fa-trash-can {
+  cursor: pointer;
 }
 </style>
