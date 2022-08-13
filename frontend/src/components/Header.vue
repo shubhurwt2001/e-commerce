@@ -27,6 +27,13 @@ import { RouterLink } from "vue-router";
             }})</RouterLink
           >
           <RouterLink
+            v-if="isAuthenticated"
+            class="nav-link"
+            active-class="active"
+            to="orders"
+            >My Orders ({{ user.orders.length }})</RouterLink
+          >
+          <RouterLink
             v-if="!isAuthenticated"
             class="nav-link"
             active-class="active"

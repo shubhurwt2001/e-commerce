@@ -3,6 +3,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Razorpay = require("razorpay");
 const Product = require("../models/product");
+var {
+  validatePaymentVerification,
+} = require("../node_modules/razorpay/dist/utils/razorpay-utils");
 const register = async (req, res) => {
   // Our register logic starts here
   try {
@@ -92,7 +95,7 @@ const login = async (req, res) => {
 
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({ quantity: { $gte: 1 } });
+    const products = await Product.find({ quantity: { $gte: 0 } });
     res.status(201).json({ data: products });
   } catch (err) {
     console.log(err);
@@ -203,17 +206,43 @@ const checkout = async (req, res) => {
 
 const placeOrder = async (req, res) => {
   try {
-    const { order_id, payment_id, signature, amount, items } = req.body;
-    const order = { order_id, payment_id, signature, amount, items };
-    await User.updateOne(
-      { _id: req.user.user_id },
-      { $push: { orders: order }, $set: { cart: [] } }
+    const { order_id, payment_id, signature, amount, items, id } = req.body;
+    const checkSignature = validatePaymentVerification(
+      { order_id: id, payment_id: payment_id },
+      signature,
+      process.env.RZRPAY_SECRET
     );
-    const user = await User.findOne(
-      { _id: req.user.user_id },
-      "_id email type cart orders"
-    );
-    res.status(201).json({ data: user });
+    if (checkSignature) {
+      const order = {
+        order_id,
+        payment_id,
+        signature,
+        amount,
+        items,
+        date: Date.now(),
+      };
+
+      items.map(async (item, index) => {
+        var product = await Product.updateOne(
+          { _id: item._id },
+          { $inc: { quantity: -item.count } }
+        );
+        item.quantity = product.quantity;
+      });
+
+      await User.updateOne(
+        { _id: req.user.user_id },
+        { $push: { orders: order }, $set: { cart: [] } }
+      );
+      const user = await User.findOne(
+        { _id: req.user.user_id },
+        "_id email type cart orders"
+      );
+
+      res.status(201).json({ data: user });
+    } else {
+      res.status(400).json({ error: "Invalid payment signature." });
+    }
   } catch (err) {
     console.log(err);
   }

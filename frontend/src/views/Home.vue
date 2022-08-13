@@ -17,7 +17,7 @@
               :style="{ 'background-image': 'url(' + product.image + ')' }"
             >
               <div class="product-details">
-                <div class="price">INR {{ product.price }}</div>
+                <div class="price">₹ {{ product.price }}</div>
                 <div class="quantity">{{ product.quantity }} left</div>
               </div>
             </div>
@@ -29,14 +29,22 @@
               <a
                 href="javascript:void(0)"
                 v-if="!isAuthenticated"
-                @click="addToLocalCart(product._id, product.quantity)"
+                @click="
+                  product.quantity > 0
+                    ? addToLocalCart(product._id, product.quantity)
+                    : this.$swal({ icon: 'error', text: 'Item out of stock' })
+                "
                 class="btn btn-primary"
                 >Add to cart</a
               >
               <a
                 href="javascript:void(0)"
                 v-if="isAuthenticated"
-                @click="addToCart(product._id, product.quantity, user._id)"
+                @click="
+                  product.quantity > 0
+                    ? addToCart(product._id, product.quantity, user._id)
+                    : this.$swal({ icon: 'error', text: 'Item out of stock' })
+                "
                 class="btn btn-primary"
                 >Add to cart</a
               >
@@ -70,7 +78,13 @@ export default {
     ...mapActions(["changeLocalCart"]),
     ...mapGetters(["user"]),
     getProducts() {
-      axios(`${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/products`)
+      axios(
+        `${
+          process.env.VUE_APP_URL
+            ? process.env.VUE_APP_URL
+            : "http://localhost:3000"
+        }/api/user/products`
+      )
         .then((res) => {
           this.products = res.data.data;
         })
@@ -122,7 +136,11 @@ export default {
 
       axios
         .post(
-          `${process.env.VUE_APP_URL ? process.env.VUE_APP_URL : 'http://localhost:3000'}/api/user/add-to-cart`,
+          `${
+            process.env.VUE_APP_URL
+              ? process.env.VUE_APP_URL
+              : "http://localhost:3000"
+          }/api/user/add-to-cart`,
           {
             cart,
           },

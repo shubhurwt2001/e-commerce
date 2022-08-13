@@ -51,7 +51,7 @@
                   </div>
                 </td>
                 <td style="width: 20%">
-                  {{ item.count }} X INR {{ item.price }} = INR
+                  {{ item.count }} X ₹ {{ item.price }} = ₹
                   {{ item.price * item.count }}
                 </td>
               </tr>
@@ -62,7 +62,7 @@
                 <th></th>
                 <th></th>
                 <th>
-                  Total :- &nbsp;&nbsp; INR
+                  Total :- &nbsp;&nbsp; ₹
                   {{
                     cart.reduce((a, b) => a + (b["price"] * b["count"] || 0), 0)
                   }}
@@ -295,6 +295,7 @@ export default {
                     }/api/user/place-order`,
                     {
                       items: this.cart,
+                      id: res.data.data.id,
                       amount: res.data.data.amount_due,
                       order_id: response.razorpay_order_id,
                       payment_id: response.razorpay_payment_id,
@@ -308,7 +309,7 @@ export default {
                   )
                   .then((res) => {
                     this.$store.dispatch("checkAuth", res.data.data);
-                    this.items = [];
+                    this.cart = [];
                     this.$swal({
                       icon: "success",
                       text: "Order placed successfully.",
@@ -316,7 +317,10 @@ export default {
                   })
                   .catch((err) => {
                     console.log(err);
-                    alert(err.response.data);
+                    this.$swal({
+                      icon: "error",
+                      text: err.response.data.error,
+                    });
                   });
               },
             };
