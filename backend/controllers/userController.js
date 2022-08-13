@@ -5,7 +5,7 @@ const Razorpay = require("razorpay");
 const Product = require("../models/product");
 var {
   validatePaymentVerification,
-} = require("../node_modules/razorpay/dist/utils/razorpay-utils");
+} = require("razorpay/dist/utils/razorpay-utils");
 const register = async (req, res) => {
   // Our register logic starts here
   try {
